@@ -155,14 +155,14 @@ module ventilation_slits(length, height) {
 module mounting_posts(is_bottom) {
     difference() {
         // Mounting posts
-        post_height = is_bottom ? inner_height_below_pcb : inner_height_above_pcb;
+        post_height = is_bottom ? inner_height_below_pcb : inner_height_above_pcb + e; // We can use overlap e here, because then cutting out the interlocking groove can make a clean cut
         for (x = [0, mount_length], y = [0, mount_width]) {
             translate([wall_thickness + (inner_length - mount_length)/2 + x, 
                        wall_thickness + (inner_width - mount_width)/2 + y, 
                        floor_ceiling_thickness - e]) {
                 difference() {
                     cylinder(d = post_diameter, h = post_height + e);
-                    cylinder(d = screw_hole_diameter, h = post_height + 1);
+                    cylinder(d = screw_hole_diameter, h = post_height + 2*e);
                 }
             }
         }
