@@ -13,6 +13,18 @@ The script includes several customizable parameters, including:
 
 Refer to the comments in the script for detailed explanations of each parameter.
 
+## Images
+Here are some images of the case:
+
+![Photo of the case](photo1.jpg)
+*Photo 1: Assembled case*
+
+![Another photo of the case](photo2.jpg)
+*Photo 2: Assembled case*
+
+![3D rendering of the case](rendering.jpg)
+*3D rendering of the case design*
+
 ## License
 This project is licensed under the GNU General Public License v3.0 (GPLv3). 
 
