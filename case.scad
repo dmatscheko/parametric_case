@@ -149,7 +149,7 @@ module ventilation_slits(length, height) {
     translate([vent_end_gap, 0, -e])
         for (i = [0:num_vent_slits-1])
             translate([i * (vent_slit_width + real_slit_spacing), 0, 0])
-                cube([vent_slit_width, vent_slit_length, floor_ceiling_thickness + e]);
+                cube([vent_slit_width, vent_slit_length, floor_ceiling_thickness + 2*e]);
 }
 
 module mounting_posts(is_bottom) {
@@ -172,7 +172,7 @@ module mounting_posts(is_bottom) {
             translate([wall_thickness + (inner_length - post_cutout.x)/2 + post_cutout_length_offset,
                     wall_thickness + (inner_width - post_cutout.y)/2 + post_cutout_width_offset,
                     post_height + floor_ceiling_thickness - post_cutout.z])
-                cube([post_cutout.x, post_cutout.y, post_cutout.z + 1]);
+                cube([post_cutout.x, post_cutout.y, post_cutout.z + e]);
         }
     }
 }
@@ -181,8 +181,8 @@ module screw_holes() {
     for (x = [0, mount_length], y = [0, mount_width]) {
         translate([wall_thickness + (inner_length - mount_length)/2 + x, 
                    wall_thickness + (inner_width - mount_width)/2 + y, 
-                   -0.1]) {
-            cylinder(d = screw_hole_thick_diameter, h = top_height + interlock_height + 1);
+                   -e]) {
+            cylinder(d = screw_hole_thick_diameter, h = top_height + 2*e);
             cylinder(h = screw_hole_thick_diameter/2, r1 = screw_hole_thick_diameter, r2 = screw_hole_thick_diameter/2);
         }
     }
@@ -192,43 +192,43 @@ module interlocking_mechanism(is_bottom, height) {
     interlock_width = wall_thickness / 2;
     if (is_bottom) {
         // Create inside lip by cutting from outside, with gap
-        translate([-1, -1, height - interlock_height - interlock_visible_gap])
-            cube([case_length + 2, interlock_width + 1 + interlock_gap, interlock_height + interlock_visible_gap + 1]);
-        translate([-1, case_width - interlock_width - interlock_gap, height - interlock_height - interlock_visible_gap])
-            cube([case_length + 2, interlock_width + 1 + interlock_gap, interlock_height + interlock_visible_gap + 1]);
-        translate([-1, -1, height - interlock_height - interlock_visible_gap])
-            cube([interlock_width + 1 + interlock_gap, case_width + 2, interlock_height + interlock_visible_gap + 1]);
-        translate([case_length - interlock_width - interlock_gap, -1, height - interlock_height - interlock_visible_gap])
-            cube([interlock_width + 1 + interlock_gap, case_width + 2, interlock_height + interlock_visible_gap + 1]);
+        translate([-e, -e, height - interlock_height - interlock_visible_gap])
+            cube([case_length, interlock_width + interlock_gap + e, interlock_height + interlock_visible_gap + e]);
+        translate([-e, case_width - interlock_width - interlock_gap, height - interlock_height - interlock_visible_gap])
+            cube([case_length + 2*e, interlock_width + interlock_gap + e, interlock_height + interlock_visible_gap + e]);
+        translate([-e, -e, height - interlock_height - interlock_visible_gap])
+            cube([interlock_width + interlock_gap + e, case_width + 2*e, interlock_height + interlock_visible_gap + e]);
+        translate([case_length - interlock_width - interlock_gap, -e, height - interlock_height - interlock_visible_gap])
+            cube([interlock_width + interlock_gap + e, case_width + 2*e, interlock_height + interlock_visible_gap + e]);
     } else {
         // Create outside lip
         translate([wall_thickness - interlock_width, wall_thickness - interlock_width, height])
             cube([case_length - 2*wall_thickness + 2*interlock_width, 
                   case_width - 2*wall_thickness + 2*interlock_width, 
-                  interlock_height + 1]);
+                  interlock_height + e]);
     }
 }
 
 module side_holes(height) {
     // Square hole
-    translate([-1, case_width/2 - square_hole_width/2, height - square_hole_height])
-        cube([wall_thickness + 2, square_hole_width, square_hole_height]);
+    translate([-e, case_width/2 - square_hole_width/2, height - square_hole_height])
+        cube([wall_thickness + 2*e, square_hole_width, square_hole_height]);
     
     // Round hole
-    translate([case_length - wall_thickness - 1, case_width/2, height - round_hole_diameter/2])
+    translate([case_length - wall_thickness - e, case_width/2, height - round_hole_diameter/2])
         rotate([0, 90, 0])
-            cylinder(d = round_hole_diameter, h = wall_thickness + 2);
-    translate([case_length - wall_thickness - 1, case_width/2 - round_hole_diameter/2, height - round_hole_diameter/2])
-        cube([wall_thickness + 2, round_hole_diameter, interlock_height + round_hole_diameter/2 + 1]);
+            cylinder(d = round_hole_diameter, h = wall_thickness + 2*e);
+    translate([case_length - wall_thickness - e, case_width/2 - round_hole_diameter/2, height - round_hole_diameter/2])
+        cube([wall_thickness + 2*e, round_hole_diameter, interlock_height + round_hole_diameter/2 + 1]);
 }
 
 module round_hole_positive(height) {
     difference() {
         translate([case_length - wall_thickness, case_width/2 - round_hole_diameter/2, height - interlock_height - interlock_visible_gap])
             cube([wall_thickness, round_hole_diameter, interlock_height + interlock_visible_gap + round_hole_diameter/2]);
-        translate([case_length - wall_thickness - 1, case_width/2, height + round_hole_diameter/2])
+        translate([case_length - wall_thickness - e, case_width/2, height + round_hole_diameter/2])
             rotate([0, 90, 0])
-                cylinder(d = round_hole_diameter, h = wall_thickness + 2);
+                cylinder(d = round_hole_diameter, h = wall_thickness + 2*e);
     }
 }
 
@@ -245,8 +245,8 @@ module case_half(is_bottom) {
                 if (!is_bottom) side_holes(height);
                 
                 // Ventilation slits
-                translate([wall_thickness, (case_width - vent_slit_length) / 2, -0.1])
-                    ventilation_slits(case_length - 2*wall_thickness, floor_ceiling_thickness + 0.2);
+                translate([wall_thickness, (case_width - vent_slit_length) / 2, 0])
+                    ventilation_slits(case_length - 2*wall_thickness, floor_ceiling_thickness);
             }
 
             mounting_posts(is_bottom);
