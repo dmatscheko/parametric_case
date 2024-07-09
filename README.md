@@ -22,7 +22,7 @@ Here are some images of the case:
 ![Another photo of the case](photo2.jpg)
 *Photo 2: Assembled case*
 
-![3D rendering of the case](rendering.jpg)
+![3D rendering of the case](rendering.png)
 *3D rendering of the case design*
 
 ## License
