@@ -14,6 +14,16 @@ inner_height_above_pcb = 8; // [0.0:0.1:1000]
 // Height of the compartment below the PCB
 inner_height_below_pcb = 22; // [0.0:0.1:1000]
 
+/* [Case Parameters] */
+// Thickness of the side walls
+wall_thickness = 2; // [0.1:0.1:15]
+// Thickness of the floor and ceiling
+floor_ceiling_thickness = 2.0; // [0.2:0.1:15]
+// Radius of the side edge fillets
+side_fillet_radius = 1.0; // [0.1:0.1:15]
+// Radius of the bottom edge fillets
+bottom_fillet_radius = 1.0; // [0.1:0.1:15]
+
 /* [Mounting Posts] */
 // Distance between mounting posts along the length (center to center)
 mount_length = 82.5; // [0.0:0.1:1000]
@@ -35,16 +45,6 @@ post_cutout_width_offset = 0.0; // [0.0:0.1:1000]
 post_cutout_top = true;
 // Enable post cutout in the bottom half
 post_cutout_bottom = false;
-
-/* [Case Parameters] */
-// Thickness of the side walls
-wall_thickness = 2; // [0.1:0.1:15]
-// Thickness of the floor and ceiling
-floor_ceiling_thickness = 2.0; // [0.2:0.1:15]
-// Radius of the side edge fillets
-side_fillet_radius = 1.0; // [0.1:0.1:15]
-// Radius of the bottom edge fillets
-bottom_fillet_radius = 1.0; // [0.1:0.1:15]
 
 /* [Side Wall Openings] */
 // Width of the square hole
@@ -83,6 +83,8 @@ show_bottom = true;
 /* [Advanced] */
 // Global resolution for curved surfaces
 $fn = 150; // [3:1:400]
+// small epsilon for overlap
+e = 0.01;
 
 // Calculated dimensions
 case_length = inner_length + 2 * wall_thickness;
@@ -91,28 +93,34 @@ case_height = inner_height_above_pcb + inner_height_below_pcb + pcb_thickness + 
 bottom_height = inner_height_below_pcb + pcb_thickness + floor_ceiling_thickness;
 top_height = inner_height_above_pcb + floor_ceiling_thickness;
 
-module rounded_cube(size) {
-    hull() {
-        // Bottom layer with chamfer
-        scale = bottom_fillet_radius / side_fillet_radius;
-        translate([side_fillet_radius, side_fillet_radius, bottom_fillet_radius])
-            scale([1, 1, scale]) sphere(r=side_fillet_radius);
-        translate([size.x - side_fillet_radius, side_fillet_radius, bottom_fillet_radius])
-            scale([1, 1, scale]) sphere(r=side_fillet_radius);
-        translate([side_fillet_radius, size.y - side_fillet_radius, bottom_fillet_radius])
-            scale([1, 1, scale]) sphere(r=side_fillet_radius);
-        translate([size.x - side_fillet_radius, size.y - side_fillet_radius, bottom_fillet_radius])
-            scale([1, 1, scale]) sphere(r=side_fillet_radius);
-
-        // Walls
-        translate([side_fillet_radius, side_fillet_radius, bottom_fillet_radius])
-            cylinder(r=side_fillet_radius, h=size.z - bottom_fillet_radius);
-        translate([size.x - side_fillet_radius, side_fillet_radius, bottom_fillet_radius])
-            cylinder(r=side_fillet_radius, h=size.z - bottom_fillet_radius);
-        translate([side_fillet_radius, size.y - side_fillet_radius, bottom_fillet_radius])
-            cylinder(r=side_fillet_radius, h=size.z - bottom_fillet_radius);
-        translate([size.x - side_fillet_radius, size.y - side_fillet_radius, bottom_fillet_radius])
-            cylinder(r=side_fillet_radius, h=size.z - bottom_fillet_radius);
+module rounded_box(size, height) {
+    difference() {
+        hull() {
+            // Fillet of bottom
+            scale = bottom_fillet_radius / side_fillet_radius;
+            translate([side_fillet_radius, side_fillet_radius, bottom_fillet_radius])
+                scale([1, 1, scale]) sphere(r=side_fillet_radius);
+            translate([size.x - side_fillet_radius, side_fillet_radius, bottom_fillet_radius])
+                scale([1, 1, scale]) sphere(r=side_fillet_radius);
+            translate([side_fillet_radius, size.y - side_fillet_radius, bottom_fillet_radius])
+                scale([1, 1, scale]) sphere(r=side_fillet_radius);
+            translate([size.x - side_fillet_radius, size.y - side_fillet_radius, bottom_fillet_radius])
+                scale([1, 1, scale]) sphere(r=side_fillet_radius);
+            // Fillet of walls
+            translate([side_fillet_radius, side_fillet_radius, bottom_fillet_radius])
+                cylinder(r=side_fillet_radius, h=size.z - bottom_fillet_radius);
+            translate([size.x - side_fillet_radius, side_fillet_radius, bottom_fillet_radius])
+                cylinder(r=side_fillet_radius, h=size.z - bottom_fillet_radius);
+            translate([side_fillet_radius, size.y - side_fillet_radius, bottom_fillet_radius])
+                cylinder(r=side_fillet_radius, h=size.z - bottom_fillet_radius);
+            translate([size.x - side_fillet_radius, size.y - side_fillet_radius, bottom_fillet_radius])
+                cylinder(r=side_fillet_radius, h=size.z - bottom_fillet_radius);
+        }
+        // Hollow out
+        translate([wall_thickness, wall_thickness, floor_ceiling_thickness])
+            cube([case_length - 2*wall_thickness, 
+                  case_width - 2*wall_thickness, 
+                  height - floor_ceiling_thickness + e]);
     }
 }
 
@@ -138,10 +146,10 @@ module ventilation_slits(length, height) {
     num_vent_slits = floor(available_length / (vent_slit_width + vent_slit_spacing));
     real_slit_spacing = (available_length - vent_slit_width * num_vent_slits) / (num_vent_slits - 1);
     
-    translate([vent_end_gap, 0, 0])
+    translate([vent_end_gap, 0, -e])
         for (i = [0:num_vent_slits-1])
             translate([i * (vent_slit_width + real_slit_spacing), 0, 0])
-                cube([vent_slit_width, vent_slit_length, height]);
+                cube([vent_slit_width, vent_slit_length, floor_ceiling_thickness + e]);
 }
 
 module mounting_posts(is_bottom) {
@@ -151,9 +159,9 @@ module mounting_posts(is_bottom) {
         for (x = [0, mount_length], y = [0, mount_width]) {
             translate([wall_thickness + (inner_length - mount_length)/2 + x, 
                        wall_thickness + (inner_width - mount_width)/2 + y, 
-                       floor_ceiling_thickness - 0.1]) {
+                       floor_ceiling_thickness - e]) {
                 difference() {
-                    cylinder(d = post_diameter, h = post_height + 0.1);
+                    cylinder(d = post_diameter, h = post_height + e);
                     cylinder(d = screw_hole_diameter, h = post_height + 1);
                 }
             }
@@ -232,13 +240,7 @@ module case_half(is_bottom) {
         union() {
         
             difference() {
-                rounded_cube([case_length, case_width, is_bottom ? height : height + interlock_height]);
-                
-                // Hollow out
-                translate([wall_thickness, wall_thickness, floor_ceiling_thickness])
-                    cube([case_length - 2*wall_thickness, 
-                          case_width - 2*wall_thickness, 
-                          height]);
+                rounded_box([case_length, case_width, is_bottom ? height : height + interlock_height], height);
                 
                 if (!is_bottom) side_holes(height);
                 
